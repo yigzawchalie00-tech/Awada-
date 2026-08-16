@@ -407,7 +407,75 @@ async function deleteMember(id) {
   }
 }
 
-// ── EXPORT ────────────────────────────────────────────────────────
+// ── IMPORT FROM EXCEL ─────────────────────────────────────────────
+async function importFromExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (rows.length === 0) {
+          showToast('ፋይሉ ባዶ ነው / File is empty', 'error');
+          return;
+        }
+
+        // Map column headers — supports both Amharic and English header names
+        const members = rows.map(row => ({
+          title:                  row['ማእረግ']          || row['title']                  || '',
+          first_name:             row['ስም']             || row['first_name']             || '',
+          father_name:            row['የአባት ስም']        || row['father_name']            || '',
+          grandfather_name:       row['የአያት ስም']        || row['grandfather_name']        || '',
+          baptism_name:           row['የክርስትና ስም']      || row['baptism_name']           || '',
+          gender:                 row['ጾታ']             || row['gender']                 || '',
+          date_of_birth:          row['የትዉልድ ቀን']       || row['date_of_birth']          || '',
+          region:                 row['ክልል']            || row['region']                 || '',
+          zone:                   row['ዞን']             || row['zone']                   || '',
+          woreda:                 row['ወረዳ']            || row['woreda']                 || '',
+          center:                 row['ማእከል']           || row['center']                 || '',
+          university_department:  row['ዲፓርትመንት']       || row['university_department']  || '',
+          batch:                  row['ባች']             || row['batch']                  || '',
+          section:                row['ሴክሽን']           || row['section']                || '',
+          phone:           String(row['ስልክ']            || row['phone']                  || ''),
+          email:                  row['ኢሜይል']           || row['email']                  || '',
+          gubae_department:       row['የጉባኤ ክፍል']       || row['gubae_department']       || '',
+          joining_date:           row['የተቀበሉበት ቀን']     || row['joining_date']           || '',
+          status:                 row['ሁኔታ'] === 'ተመርቀዋል' ? 'graduated' : (row['status'] || 'active'),
+          graduation_year: String(row['የተመረቁበት ዓ.ም']   || row['graduation_year']        || ''),
+          confession_father:      row['የንስሐ አባት']       || row['confession_father']      || '',
+          notes:                  row['ማሳሰቢያ']          || row['notes']                  || '',
+        })).filter(m => m.first_name && m.father_name);
+
+        if (members.length === 0) {
+          showToast('ትክክለኛ ስም ያላቸው ረድፎች አልተገኙም / No valid rows found (ስም and የአባት ስም are required)', 'error');
+          return;
+        }
+
+        const confirmed = confirm(
+          `${members.length} ${currentLang === 'am' ? 'አባላት ተገኝተዋል። ማስገባት ይፈለጋል?' : 'members found. Import them?'}`
+        );
+        if (!confirmed) return;
+
+        const result = await api('POST', '/api/members/import', { members });
+        const msg = currentLang === 'am'
+          ? `✓ ${result.imported} ተጨምረዋል${result.failed > 0 ? ` — ${result.failed} አልተሳካም` : ''}`
+          : `✓ ${result.imported} imported${result.failed > 0 ? ` — ${result.failed} failed` : ''}`;
+        showToast(msg, result.failed > 0 ? 'error' : 'success');
+        loadMembers(1);
+        loadDashboard();
+        resolve(result);
+      } catch (err) {
+        showToast('Import failed: ' + err.message, 'error');
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsArrayBuffer(file);
+  });
+}
 async function exportToExcel() {
   try {
     const status = document.getElementById('filter-status').value;
@@ -554,6 +622,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Filters
   ['filter-status', 'filter-dept', 'filter-batch'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => loadMembers(1));
+  });
+
+  // Import
+  document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await importFromExcel(file);
+    e.target.value = ''; // reset so same file can be re-imported if needed
   });
 
   // Export
