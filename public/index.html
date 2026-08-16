@@ -86,6 +86,8 @@
       <div class="page-header">
         <h2 class="page-title" data-am="አባላት" data-en="Members">አባላት</h2>
         <div class="header-actions">
+          <button class="btn-ghost" id="import-btn" data-am="Excel አምጣ" data-en="Import Excel">Excel አምጣ</button>
+          <input type="file" id="import-file-input" accept=".xlsx,.xls" style="display:none;">
           <button class="btn-primary" id="export-btn" data-am="Excel ላክ" data-en="Export Excel">Excel ላክ</button>
         </div>
       </div>
@@ -111,7 +113,7 @@
     <div id="page-add-member" class="page" style="display:none;">
       <div class="page-header">
         <h2 class="page-title" id="form-title" data-am="አባል ጨምር" data-en="Add Member">አባል ጨምር</h2>
-        <button class="btn-ghost" id="cancel-form-btn" data-am="ተወው" data-en="Cancel">ተወው</button>
+        <button class="btn-ghost" id="cancel-form-btn" data-am="ተወው" data-en="Cancel">ተመለስ</button>
       </div>
       <form id="member-form" class="member-form" enctype="multipart/form-data">
         <input type="hidden" id="edit-member-id">
@@ -122,7 +124,7 @@
             <img id="photo-preview" src="" alt="" style="display:none;">
             <div id="photo-placeholder">
               <div class="photo-icon">📷</div>
-              <div data-am="ፎቶ ጫን" data-en="Upload Photo">ፎቶ ጫን</div>
+              <div data-am="ፎቶ ጫን" data-en="Upload Photo">ፎቶ </div>
             </div>
             <input type="file" id="photo-input" accept="image/*" style="display:none;">
           </div>
@@ -139,6 +141,7 @@
                 <option value="ዲ/ን">ዲ/ን</option>
                 <option value="ቀሲስ">ቀሲስ</option>
                 <option value="ሠ/ዲ">ሠ/ዲ</option>
+                <option value="አባል">አባል</option>
               </select>
             </div>
             <div class="form-group">
@@ -216,7 +219,7 @@
             </div>
             <div class="form-group">
               <label data-am="ባች" data-en="Batch">ባች</label>
-              <input type="text" name="batch" id="f-batch" placeholder="ለምሳሌ: 2017">
+              <input type="text" name="batch" id="f-batch" placeholder="ለምሳሌ: 2018">
             </div>
             <div class="form-group">
               <label data-am="ሴክሽን" data-en="Section">ሴክሽን</label>
